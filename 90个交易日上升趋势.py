@@ -32,10 +32,14 @@ def calc(code: str):
     prev_ma60, prev_date = prev_v[k("ma60")], prev_v[k("date")]
 
     # 好长时间没有k线的，跳过
-    if time_prefix != last_date:
-        return np.nan
+    # if time_prefix != last_date:
+    #    return np.nan
 
     if last_ma60 < prev_ma60:
+        return np.nan
+
+    subma60 = (float(last_ma60 - prev_ma60) / float(prev_ma60)) * 100
+    if subma60 > 15:
         return np.nan
 
     idx = -1
@@ -48,9 +52,6 @@ def calc(code: str):
             if ret > 10:
                 return np.nan
         idx -= 1
-    subma60 = (float(last_ma60 - prev_ma60) / float(prev_ma60)) * 100
-    if subma60 > 25:
-        return np.nan
 
     print("手工校验下:%s" % code)
     return format(
@@ -62,14 +63,17 @@ if __name__ == "__main__":
     if not os.path.exists("data"):
         os.mkdir("data")
 
+    if not os.path.exists("out"):
+        os.mkdir("out")
+
     df = ak.stock_lrb_em()
-    df = df.loc[
-        (df["净利润同比"] > 5.0)
-        & (df["净利润同比"] < 300.0)
-        & (df["股票简称"].str.find("ST") == -1)
-        & (df["股票简称"].str.find("退") == -1),
-        :,
-    ]
+    # df = df.loc[
+    #    (df["净利润同比"] > 5.0)
+    #    & (df["净利润同比"] < 300.0)
+    #    & (df["股票简称"].str.find("ST") == -1)
+    #    & (df["股票简称"].str.find("退") == -1),
+    #    :,
+    # ]
     df.to_csv("temp.csv", index=False)
     df["signle"] = df.apply(lambda x: calc(x["股票代码"]), axis=1)
     df["industry"] = df.apply(lambda x: get_industry(x["股票代码"], ""), axis=1)
@@ -85,3 +89,5 @@ if __name__ == "__main__":
 
     out_file = format("out/90日上升趋势_%s.xlsx" % (time_prefix))
     df.to_excel(out_file, index=False)
+    if os.path.exists("temp.csv"):
+        os.remove("temp.csv")

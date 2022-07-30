@@ -15,6 +15,7 @@ pd.set_option("display.width", 1000)
 
 r = Redis(host="127.0.0.1", port=6379, decode_responses=True)
 industry_key = "industry"
+failed_get_key = "failed_get_daily"
 
 
 def invide_stock_code(symbol: str):
@@ -79,6 +80,10 @@ def get_daily_data(_symbol: str) -> pd.DataFrame:
     start_date = (str(dt_object).split(" ")[0]).replace(" ", "")
     name = get_name_akshare(_symbol)
     out_file = get_stock_data_file(_symbol)
+    val = r.hget(failed_get_key, _symbol)
+    if val is not None:
+        # print("redis check get stock daily data[%s] err:%s" % (_symbol, val))
+        return None
     if os.path.exists(out_file):
         return pd.read_csv(out_file)
     if name == "":
@@ -92,6 +97,7 @@ def get_daily_data(_symbol: str) -> pd.DataFrame:
         return df
     except Exception as e:
         print("get stock daily data[%s] err:%s" % (_symbol, e))
+        r.hset(failed_get_key, _symbol, str(e))
         return None
 
 
@@ -204,4 +210,4 @@ def k(key: str) -> int:
 
 
 def get_stock_data_file(code: str):
-    return format("stock_data/%s.csv" % (code))
+    return format("data/%s.csv" % (code))
