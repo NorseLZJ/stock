@@ -211,3 +211,11 @@ def k(key: str) -> int:
 
 def get_stock_data_file(code: str):
     return format("data/%s.csv" % (code))
+
+
+def create_dir(dir_list):
+    if len(dir_list) <=0:
+        return 
+    for d in dir_list:
+        if not os.path.exists(d):
+            os.mkdir(d)
