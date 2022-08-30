@@ -1,5 +1,5 @@
 import akshare as ak
-import talib
+import talib as tl
 import numpy as np
 from datetime import datetime, date
 import datetime as dt
@@ -120,41 +120,36 @@ def collect_data_by_json(_data):
     return collect_data_by_df(_df)
 
 
-def collect_data_by_df(_df) -> pd.DataFrame:
-    if _df is None:
+def reset_macd(macd: float):
+    return macd * 2
+
+
+def collect_data_by_df(df: pd.DataFrame) -> pd.DataFrame:
+    if df is None:
         return None
-    (dif, dea, macd) = talib.MACD(
-        _df["close"],
-        fastperiod=short_win,
-        slowperiod=long_win,
-        signalperiod=macd_win,
-    )
-    ma5 = np.around(talib.SMA(_df["close"], timeperiod=5), 2)
-    ma10 = np.around(talib.SMA(_df["close"], timeperiod=10), 2)
-    ma20 = np.around(talib.SMA(_df["close"], timeperiod=20), 2)
-    ma60 = np.around(talib.SMA(_df["close"], timeperiod=60), 2)
-    dif = np.around(dif, 2)
-    dea = np.around(dea, 2)
-    macd = np.around(macd, 2)
-    _df["upper"], _df["middle"], _df["lower"] = talib.BBANDS(
-        _df.close.values,
-        timeperiod=20,
-        # number of non-biased standard deviations from the mean
-        nbdevup=2,
-        nbdevdn=2,
-        # Moving average type: simple moving average here
-        matype=0,
-    )
 
-    _df.insert(loc=5, column="dif", value=dif)
-    _df.insert(loc=5, column="dea", value=dea)
-    _df.insert(loc=5, column="macd", value=macd)
-    _df.insert(loc=5, column="ma5", value=ma5)
-    _df.insert(loc=5, column="ma10", value=ma10)
-    _df.insert(loc=5, column="ma20", value=ma20)
-    _df.insert(loc=5, column="ma60", value=ma60)
+    dif, dea, macd = tl.MACD(
+        df["close"], fastperiod=12, slowperiod=26, signalperiod=9
+    )
+    ma5 = np.around(tl.SMA(df["close"], timeperiod=5), 3)
+    ma10 = np.around(tl.SMA(df["close"], timeperiod=10), 3)
+    ma20 = np.around(tl.SMA(df["close"], timeperiod=20), 3)
+    ma60 = np.around(tl.SMA(df["close"], timeperiod=60), 3)
 
-    return _df
+    df.insert(loc=6, column="dif", value=np.around(dif, 3))
+    df.insert(loc=7, column="dea", value=np.around(dea, 3))
+    df.insert(loc=8, column="macd", value=np.around(macd, 3))
+    df.insert(loc=9, column="ma5", value=ma5)
+    df.insert(loc=10, column="ma10", value=ma10)
+    df.insert(loc=11, column="ma20", value=ma20)
+    df.insert(loc=12, column="ma60", value=ma60)
+
+    df["macd"] = df.apply(lambda x: reset_macd(x["macd"]), axis=1)
+
+    df.dropna(inplace=True)
+    # df.reset_index(inplace=True, drop=True)
+    # df.reset_index(inplace=True)
+    return df
 
 
 def clean_data_by_name(df: pd.DataFrame, type: str) -> pd.DataFrame:
@@ -214,8 +209,28 @@ def get_stock_data_file(code: str):
 
 
 def create_dir(dir_list):
-    if len(dir_list) <=0:
-        return 
+    if len(dir_list) <= 0:
+        return
     for d in dir_list:
         if not os.path.exists(d):
             os.mkdir(d)
+
+
+def get_10_daily_data(_symbol: str) -> pd.DataFrame:
+    td = dt.date.today()
+    end_date = str(td).replace("-", "")
+    timestamp = datetime.timestamp(datetime.now())
+    dt_object = datetime.fromtimestamp(int(timestamp) - (100 * 86400))
+    start_date = (str(dt_object).split(" ")[0]).replace(" ", "")
+    name = get_name_akshare(_symbol)
+    if name == "":
+        return None
+    try:
+        # 拿10天复权的数据
+        df = ak.stock_zh_a_daily(
+            name, start_date=start_date, end_date=end_date, adjust="qfq"
+        )
+        return df
+    except Exception as e:
+        print("get stock daily data[%s] err:%s" % (_symbol, e))
+        return None

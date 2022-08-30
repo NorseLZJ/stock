@@ -62,7 +62,11 @@ def check_ma60(df: pd.DataFrame):
 
 
 def calc(symbol: str, code: str):
-    if symbol.find("ST") != -1 or symbol.find("退") != -1 or invide_stock_code(code) is False:
+    if (
+        symbol.find("ST") != -1
+        or symbol.find("退") != -1
+        or invide_stock_code(code) is False
+    ):
         return np.nan
 
     df = get_daily_data(code)
@@ -71,14 +75,19 @@ def calc(symbol: str, code: str):
 
     df = collect_data_by_df(df)
     df.dropna(inplace=True, axis=0)
-    df.reset_index(inplace=True)
+    df.reset_index(inplace=True, drop=True)
     if len(df) <= 0:
         return np.nan
 
     v = df.iloc[-1]
-    #print(df.tail(3))
-    #print(v)
-    ma5, ma10, ma20, ma60 = v[k("ma5")], v[k("ma10")], v[k("ma20")], v[k("ma60")]
+    # print(df.tail(3))
+    # print(v)
+    ma5, ma10, ma20, ma60 = (
+        v[k("ma5")],
+        v[k("ma10")],
+        v[k("ma20")],
+        v[k("ma60")],
+    )
     if ma5 == 0.0 or ma10 == 0.0 or ma20 == 0.0 or ma60 == 0.0:
         return np.nan
     if ma5 < ma10 or ma5 < ma20 or ma5 < ma60:
