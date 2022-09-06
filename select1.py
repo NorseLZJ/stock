@@ -24,7 +24,9 @@ def check_ma60(df: pd.DataFrame):
     size = len(df) - 1
     count = 0
     while size >= 0:
-        (_, _, _, _, close, _, _, _, _, _, _, cma60) = get_params(df, size)
+
+        v = df.iloc[size]
+        close, cma60 = v["close"], v["ma60"]
         if last_ma60 == 0:
             last_ma60 = cma60
             last_price = close
@@ -59,7 +61,8 @@ def calc(symbol: str, price: float, code: str):
             if len(df) <= 0:
                 return np.nan
 
-            (_, _, _, _, _, _, _, _, ma5, ma10, ma20, ma60) = get_params(df, len(df) - 1)
+            v = df.iloc[len(df) - 1]
+            ma5, ma10, ma20, ma60 = v["ma5"], v["ma10"], v["ma20"], v["ma60"]
             if ma5 == 0.0 or ma10 == 0.0 or ma20 == 0.0 or ma60 == 0.0:
                 return np.nan
             if ma5 < ma10 or ma5 < ma20 or ma5 < ma60:
@@ -87,7 +90,9 @@ if __name__ == "__main__":
         df.to_excel(file)
     df = pd.read_excel(file, dtype=str)
     # print(df.head(30))
-    df["industry"] = df.apply(lambda x: get_industry(x["股票代码"], x["股票简称"]), axis=1)
+    df["industry"] = df.apply(
+        lambda x: get_industry(x["股票代码"], x["股票简称"]), axis=1
+    )
     df.dropna(inplace=True, axis=0)
     df["buy"] = df.apply(lambda x: calc(x["股票简称"], x["最新价"], x["股票代码"]), axis=1)
     df.dropna(inplace=True, axis=0)

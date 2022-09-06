@@ -43,8 +43,8 @@ def check_ma60(df: pd.DataFrame):
     count = 0
     while size >= 0:
 
-        v = df.loc[size]
-        close, cma60 = v[k("close")], v[k("ma60")]
+        v = df.iloc[size]
+        close, cma60 = v["close"], v["ma60"]
         if last_ma60 == 0:
             last_ma60 = cma60
             last_price = close
@@ -82,12 +82,7 @@ def calc(symbol: str, code: str):
     v = df.iloc[-1]
     # print(df.tail(3))
     # print(v)
-    ma5, ma10, ma20, ma60 = (
-        v[k("ma5")],
-        v[k("ma10")],
-        v[k("ma20")],
-        v[k("ma60")],
-    )
+    ma5, ma10, ma20, ma60 = v["ma5"], v["ma10"], v["ma20"], v["ma60"]
     if ma5 == 0.0 or ma10 == 0.0 or ma20 == 0.0 or ma60 == 0.0:
         return np.nan
     if ma5 < ma10 or ma5 < ma20 or ma5 < ma60:

@@ -27,9 +27,9 @@ def calc(code: str):
         return np.nan
 
     last_v = df.iloc[-1]
-    last_ma60, last_date = last_v[k("ma60")], last_v[k("date")]
+    last_ma60, last_date = last_v["ma60"], last_v["date"]
     prev_v = df.iloc[-90]
-    prev_ma60, prev_date = prev_v[k("ma60")], prev_v[k("date")]
+    prev_ma60, prev_date = prev_v["ma60"], prev_v["date"]
 
     # 好长时间没有k线的，跳过
     # if time_prefix != last_date:
@@ -46,7 +46,7 @@ def calc(code: str):
     while idx >= -90:
         # 最近90个交易日有某天股价在60日线上方10%的位置
         v = df.iloc[idx]
-        ma60, close = v[k("ma60")], v[k("close")]
+        ma60, close = v["ma60"], v["close"]
         if close > ma60:
             ret = (float(close - ma60) / float(ma60)) * 100
             if ret > 10:

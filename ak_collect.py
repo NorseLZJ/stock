@@ -32,32 +32,30 @@ def is_top(pdif, cdif, ndif):
     return pdif < cdif and ndif < cdif
 
 
-def calc(_df):
+def calc(df):
     idx = 0
-    _df["buy"] = s_sellout
+    df["buy"] = s_sellout
     p_state = s_sellout
-    while idx < len(_df):
-        if idx < 1 or idx >= len(_df) - 1:
+    while idx < len(df):
+        if idx < 1 or idx >= len(df) - 1:
             idx += 1
             continue
 
-        pv = df.loc[idx - 1]
-        pdif = pv[k("dif")]
-        cv = df.loc[idx]
-        cdif = cv[k("dif")]
-        nv = df.loc[idx]
-        ndif = nv[k("dif")]
+        pdif = df.iloc[idx - 1]["dif"]
+        cdif = df.iloc[idx]["dif"]
+        ndif = df.iloc[idx + 1]["dif"]
+
         if p_state == s_sellout:
             if is_bottom(pdif, cdif, ndif):
-                _df.loc[idx, "buy"] = s_buy
+                df.loc[idx, "buy"] = s_buy
                 p_state = s_buy
         elif p_state == s_buy:
             if is_top(pdif, cdif, ndif):
-                _df.loc[idx, "buy"] = s_sellout
+                df.loc[idx, "buy"] = s_sellout
                 p_state = s_sellout
 
         idx += 1
-    return _df
+    return df
 
 
 if __name__ == "__main__":
@@ -74,7 +72,9 @@ if __name__ == "__main__":
 
     df.to_excel("opt.xlsx", index=False, startrow=3, startcol=1)
 
-    my_color = mpf.make_marketcolors(up="red", down="green", edge="inherit", volume="inherit")
+    my_color = mpf.make_marketcolors(
+        up="red", down="green", edge="inherit", volume="inherit"
+    )
     my_stype = mpf.make_mpf_style(marketcolors=my_color)
 
     datetime_series = pd.to_datetime(df["date"])
@@ -88,8 +88,16 @@ if __name__ == "__main__":
         # mpf.make_addplot(df['signal_long'], scatter=True, markersize=5, marker="^", color='r'),
         # mpf.make_addplot(df['signal_short'], scatter=True, markersize=5, marker="s", color='g')
         # mpf.make_addplot(buy, scatter=True, markersize=50, marker=r'$\Uparrow$', color='green')
-        mpf.make_addplot(buy, scatter=True, markersize=50, marker=r"$\Uparrow$", color="red"),
-        mpf.make_addplot(sellout, scatter=True, markersize=50, marker=r"$\Downarrow$", color="green"),
+        mpf.make_addplot(
+            buy, scatter=True, markersize=50, marker=r"$\Uparrow$", color="red"
+        ),
+        mpf.make_addplot(
+            sellout,
+            scatter=True,
+            markersize=50,
+            marker=r"$\Downarrow$",
+            color="green",
+        ),
     ]
 
     df2 = df.set_index(datetime_index)

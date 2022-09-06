@@ -13,7 +13,8 @@ def check_avg(_symbol: str) -> bool:
     if len(cp_df) <= 0:
         return False
 
-    (_, _, _, _, close, _, _, _, _, _, ma20, ma60, _) = get_params(cp_df, len(cp_df) - 1)
+    v = cp_df.iloc[len(cp_df) - 1]
+    close, ma20, ma60 = v["close"], v["ma20"], v["ma60"]
 
     # TODO 当前股价在60,20天均线以上 但是超过60均线不足5%
     if ma60 != 0 and ma20 != 0:

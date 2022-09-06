@@ -39,7 +39,8 @@ def check_ma60(df: pd.DataFrame):
     size = len(df) - 1
     count = 0
     while size >= 0:
-        (_, _, _, _, close, _, _, _, _, _, _, cma60) = get_params(df, size)
+        v = df.iloc[size]
+        close, cma60 = v["close"], v["ma60"]
         if last_ma60 == 0:
             last_ma60 = cma60
             last_price = close
@@ -71,8 +72,8 @@ def calc(symbol: str, code: str):
     if len(df) <= 0:
         return np.nan
 
-    #print(df.head(5))
-    #print(df.tail(5))
+    # print(df.head(5))
+    # print(df.tail(5))
 
     max_idx = len(df) - 1
     if max_idx < 150:  # 股票日销不到120个，太少
