@@ -176,34 +176,6 @@ def get_stock_data_file(symbol: str):
     return format("stock_data/%s.csv" % (symbol))
 
 
-dict_reflact = {
-    "date": 0,
-    "open": 1,
-    "high": 2,
-    "low": 3,
-    "close": 4,
-    "ma60": 5,
-    "ma20": 6,
-    "ma10": 7,
-    "ma5": 8,
-    "macd": 9,
-    "dea": 10,
-    "dif": 11,
-    "volume": 12,
-    "money": 13,
-    "upper": 14,
-    "middle": 15,
-    "lower": 16,
-}
-
-
-def k(key: str) -> int:
-    v = dict_reflact.get(key)
-    if v is None:
-        return None
-    return v
-
-
 def get_stock_data_file(code: str):
     return format("data/%s.csv" % (code))
 
