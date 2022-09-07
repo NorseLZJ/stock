@@ -90,9 +90,7 @@ def get_daily_data(_symbol: str) -> pd.DataFrame:
         return None
     try:
         # 拿一年左右前复权的数据
-        df = ak.stock_zh_a_daily(
-            name, start_date=start_date, end_date=end_date, adjust="qfq"
-        )
+        df = ak.stock_zh_a_daily(name, start_date=start_date, end_date=end_date, adjust="qfq")
         df.to_csv(out_file, index=False)
         return df
     except Exception as e:
@@ -128,9 +126,7 @@ def collect_data_by_df(df: pd.DataFrame) -> pd.DataFrame:
     if df is None:
         return None
 
-    dif, dea, macd = tl.MACD(
-        df["close"], fastperiod=12, slowperiod=26, signalperiod=9
-    )
+    dif, dea, macd = tl.MACD(df["close"], fastperiod=12, slowperiod=26, signalperiod=9)
     ma5 = np.around(tl.SMA(df["close"], timeperiod=5), 3)
     ma10 = np.around(tl.SMA(df["close"], timeperiod=10), 3)
     ma20 = np.around(tl.SMA(df["close"], timeperiod=20), 3)
@@ -163,9 +159,7 @@ def clean_data_by_name(df: pd.DataFrame, type: str) -> pd.DataFrame:
             & (df["股票简称"].str.find("退") == -1),
             :,
         ]
-        df.sort_values(
-            by=["净利润同比"], inplace=True, ignore_index=True, ascending=False
-        )
+        df.sort_values(by=["净利润同比"], inplace=True, ignore_index=True, ascending=False)
     elif type == "xjll":
         pass
     df.reset_index(inplace=True, drop=True)
@@ -199,10 +193,26 @@ def get_10_daily_data(_symbol: str) -> pd.DataFrame:
         return None
     try:
         # 拿10天复权的数据
-        df = ak.stock_zh_a_daily(
-            name, start_date=start_date, end_date=end_date, adjust="qfq"
-        )
+        df = ak.stock_zh_a_daily(name, start_date=start_date, end_date=end_date, adjust="qfq")
         return df
     except Exception as e:
         print("get stock daily data[%s] err:%s" % (_symbol, e))
         return None
+
+
+def is_bofen(prev_dif, cur_dif, next_dif):
+    if cur_dif > prev_dif and cur_dif > next_dif:
+        return True
+    return False
+
+
+def is_bogu(prev_dif, cur_dif, next_dif):
+    if cur_dif < prev_dif and cur_dif < next_dif:
+        return True
+    return False
+
+
+def is_jincha(prev_dif, prev_dea, cur_dif, cur_dea):
+    if prev_dif < prev_dea and cur_dif > cur_dea:
+        return True
+    return False

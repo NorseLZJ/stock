@@ -78,12 +78,8 @@ class StockData(object):
     def mpf_draw(self):
         df = self.df
 
-        df["buy"] = df.apply(
-            lambda x: buy_set(x["date"], x["close"], self.trades), axis=1
-        )
-        df["sell"] = df.apply(
-            lambda x: sell_set(x["date"], x["close"], self.trades), axis=1
-        )
+        df["buy"] = df.apply(lambda x: buy_set(x["date"], x["close"], self.trades), axis=1)
+        df["sell"] = df.apply(lambda x: sell_set(x["date"], x["close"], self.trades), axis=1)
 
         df.rename(
             columns={
@@ -151,12 +147,8 @@ class StockData(object):
         ##加入买和卖
         # for i
         add_plot = [
-            mpf.make_addplot(
-                df["buy"], scatter=True, markersize=80, marker="^", color="r"
-            ),
-            mpf.make_addplot(
-                df["sell"], scatter=True, markersize=80, marker="v", color="g"
-            ),
+            mpf.make_addplot(df["buy"], scatter=True, markersize=80, marker="^", color="r"),
+            mpf.make_addplot(df["sell"], scatter=True, markersize=80, marker="v", color="g"),
             # mpf.make_addplot(exp12, type='line', color='y'),
             # mpf.make_addplot(exp26, type='line', color='r'),
             mpf.make_addplot(
@@ -202,19 +194,12 @@ class StockData(object):
             if i > len(self.df) - 2:
                 break  # 数据结束了
 
-            v = self.df.loc[i - 1]
-            pdif = v[k("dif")]
-            v = self.df.loc[i]
-            (cclose, cdif, cdea, cmacd, cdate, cma60) = (
-                v[k("close")],
-                v[k("dif")],
-                v[k("dea")],
-                v[k("macd")],
-                v[k("date")],
-                v[k("ma60")],
-            )
-            v = self.df.loc[i + 1]
-            nclose, ndif = v[k("close")], v[k("dif")]
+            v = self.df.iloc[i - 1]
+            pdif = v["dif"]
+            v = self.df.iloc[i]
+            cclose, cdif, cdea, cmacd, cdate, cma60 = v["close"], v["dif"], v["dea"], v["macd"], v["date"], v["ma60"]
+            v = self.df.iloc[i + 1]
+            nclose, ndif = v["close"], v["dif"]
             """
             条件，判定买卖关键位置 所有的[buy,sellout]都是当前信号点的下一个节点
             date,price 用的是下一个节点的
@@ -305,7 +290,7 @@ if __name__ == "__main__":
         os.mkdir("log")
 
     # 账号如果提示不能用，这里换一下
-    jq.auth("15821081643", "Www19561007.")
+    jq.auth("", "")
     df = pd.read_excel("导入测试标准格式.xls", dtype=str)
     df.apply(lambda x: calc(jq.normalize_code(x["code"]), True), axis=1)
     calc(jq.normalize_code("002424"), True)

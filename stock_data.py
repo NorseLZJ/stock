@@ -35,9 +35,21 @@ class SixtyMinter(object):
 
     def info_six_minter(self):
         if self.state == purchase_ing:
-            return format("%s  买入持有   %f\n" % (self.date, self.dif)), self.state, self.price, self.date, self.next_date
+            return (
+                format("%s  买入持有   %f\n" % (self.date, self.dif)),
+                self.state,
+                self.price,
+                self.date,
+                self.next_date,
+            )
         else:
-            return format("%s  卖出空仓   %f\n" % (self.date, self.dif)), self.state, self.price, self.date, self.next_date
+            return (
+                format("%s  卖出空仓   %f\n" % (self.date, self.dif)),
+                self.state,
+                self.price,
+                self.date,
+                self.next_date,
+            )
         return "-" * 10
 
 
@@ -65,12 +77,12 @@ class StockData(object):
             if i <= 0 or i > (len(self.df) - 2):
                 continue  # start or end
 
-            pv = get_params_by_key(self.df, ["close", "dif", "dea"], i - 1)
-            pclose, pdif, pdea = (pv[0], pv[1], pv[2])
-            cv = get_params_by_key(self.df, ["close", "dif", "dea", "ma60", "day"], i)
-            cclose, cdif, cdea, cma60, cday = (cv[0], cv[1], cv[2], cv[3], cv[4])
-            nv = get_params_by_key(self.df, ["close", "dif", "dea", "day"], i + 1)
-            nclose, ndif, ndea, nday = (nv[0], nv[1], nv[2], nv[3])
+            pv = self.df.iloc[i - 1]
+            pclose, pdif, pdea = pv["close"], pv["dif"], pv["dea"]
+            cv = self.df.iloc[i]
+            cclose, cdif, cdea, cma60, cday = cv["close"], cv["dif"], cv["dea"], cv["ma60"], cv["day"]
+            nv = self.df.iloc[i + 1]
+            nclose, ndif, ndea, nday = nv["close"], nv["dif"], nv["dea"], nv["day"]
 
             if cdif > pdif and cclose >= cma60:
                 """当前大于前一个，谷底，操作后一个到后一个+1"""
