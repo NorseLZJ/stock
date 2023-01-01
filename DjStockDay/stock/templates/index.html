@@ -1,0 +1,212 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+    <table align="center" bordercolor="#000000" border="2" cellspacing="0" cellpadding="5" bgcolor="white">
+        <caption>
+            <h1>
+                <font color="red">股票k线标记</font>
+            </h1>
+        </caption>
+        <tr>
+            <td>股票代码：</td>
+            <td><input type="text" id="ID" placeholder="请输入股票代码" value="000001"></td>
+            <td>
+                <input id="btn1" type="button" class="btn btn-primary" value="提交">
+            </td>
+        </tr>
+    </table>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(function () {
+            bindBtn1Event();
+        })
+
+        function bindBtn1Event() {
+            const upColor = '#ec0000';
+            const upBorderColor = '#8A0000';
+            const downColor = '#00da3c';
+            const downBorderColor = '#008F28';
+            $("#btn1").click(function () {
+                $.ajax({
+                    type: "post",
+                    url: "/stock/",//url
+                    data: {
+                        ID: $("#ID").val()
+                    },
+                    dataType: "JSON",
+                    success: function (result) {
+                        let rawData = eval(result.data)
+                        console.log(rawData)
+                        let myChart = echarts.init(document.getElementById("div_1"))
+                        let option;
+
+                        // Each item: open，close，lowest，highest
+                        const pointData = calcPoint();
+                        const data0 = splitData(rawData);
+
+                        function splitData(rawData) {
+                            const categoryData = [];
+                            const values = [];
+                            for (let i = 0; i < rawData.length; i++) {
+                                categoryData.push(rawData[i].splice(0, 1)[0]);
+                                values.push(rawData[i]);
+                            }
+                            return {
+                                categoryData: categoryData,
+                                values: values
+                            };
+                        }
+
+                        function calcPoint() {
+                            result = [];
+                            for (let i = 0; i < rawData.length; i++) {
+                                let item = rawData[i]
+                                //console.log(item)
+                                if (0.0 !== parseFloat(item[5])) {
+                                    result.push(
+                                        {
+                                            name: 'Buy',
+                                            coord: [item[0], parseFloat(item[5]) - 0.2],
+                                            value: item[5],
+                                            itemStyle: {
+                                                color: 'rgb(255,0,0)'
+                                            }
+                                        },
+                                    )
+                                }
+                                if (0.0 !== parseFloat(item[6])) {
+                                    result.push(
+                                        {
+                                            name: 'Sell',
+                                            coord: [item[0], parseFloat(item[6]) + 0.1],
+                                            value: item[6],
+                                            itemStyle: {
+                                                color: 'rgb(0,255,25)'
+                                            }
+                                        },
+                                    )
+                                }
+                            }
+                            //console.log(result)
+                            return result;
+                        }
+
+                        function calculateMA(dayCount) {
+                            let result = [];
+                            for (let i = 0, len = data0.values.length; i < len; i++) {
+                                if (i < dayCount) {
+                                    result.push('-');
+                                    continue;
+                                }
+                                let sum = 0;
+                                for (let j = 0; j < dayCount; j++) {
+                                    sum += +data0.values[i - j][1];
+                                }
+                                result.push(sum / dayCount);
+                            }
+                            return result;
+                        }
+
+                        function MAFunc(v1, v2) {
+                            return {
+                                name: v1,
+                                type: 'line',
+                                data: calculateMA(v2),
+                                smooth: true,
+                                showSymbol: false,
+                                lineStyle: {
+                                    normal: {
+                                        width: 1
+                                    }
+                                }
+                            };
+                        }
+
+                        option = {
+                            title: {
+                                text: $("#ID").val() + "",
+                                left: 0
+                            },
+                            tooltip: {
+                                trigger: 'axis',
+                                axisPointer: {
+                                    type: 'cross'
+                                }
+                            },
+                            legend: {
+                                data: ['日K', 'MA5', 'MA10', 'MA20', 'MA30', 'MA60']
+                            },
+                            grid: {
+                                right: 30,
+                                bottom: 80
+                            },
+                            xAxis: {
+                                type: 'category',
+                                data: data0.categoryData,
+                                boundaryGap: false,
+                                axisLine: {onZero: false},
+                                splitLine: {show: false},
+                                min: 'dataMin',
+                                max: 'dataMax'
+                            },
+                            yAxis: {
+                                scale: true,
+                                splitArea: {
+                                    show: true
+                                }
+                            },
+                            dataZoom: [
+                                {
+                                    type: 'inside',
+                                    start: 50,
+                                    end: 100
+                                },
+                                {
+                                    show: true,
+                                    type: 'slider',
+                                    top: '90%',
+                                    start: 50,
+                                    end: 100
+                                }
+                            ],
+                            series: [
+                                {
+                                    name: '日K',
+                                    type: 'candlestick',
+                                    data: data0.values,
+                                    itemStyle: {
+                                        color: upColor,
+                                        color0: downColor,
+                                        borderColor: upBorderColor,
+                                        borderColor0: downBorderColor
+                                    },
+                                    markPoint: {
+                                        label: {
+                                            formatter: function (param) {
+                                                return param != null ? Math.round(param.value) + '' : '';
+                                            }
+                                        },
+                                        data: pointData,
+                                        tooltip: {
+                                            formatter: function (param) {
+                                                return param.name + '<br>' + (param.data.coord || '');
+                                            }
+                                        }
+                                    },
+                                },
+                                MAFunc('MA5', 5),
+                                MAFunc('MA10', 10),
+                                MAFunc('MA20', 20),
+                                MAFunc('MA30', 30),
+                                MAFunc('MA60', 60),
+                            ]
+                        };
+                        option && myChart.setOption(option);
+                    }
+                })
+            })
+        }
+    </script>
+{% endblock %}

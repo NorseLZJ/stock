@@ -1,0 +1,30 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=UTF-8"/>
+    <script type="text/javascript" src="{% static 'js/jquery.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/echarts.js' %}"></script>
+    <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}"/>
+</head>
+
+<body>
+
+
+
+
+{% block content %}
+
+{% endblock %}
+
+<br/>
+
+<div id="div_1" style="width: 1920px;height:1080px;margin:0 auto"></div>
+
+{% block js %}
+{% endblock %}
+
+</body>
+</html>

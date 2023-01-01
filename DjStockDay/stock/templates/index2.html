@@ -1,0 +1,92 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+    <table align="center" bordercolor="#000000" border="2" cellspacing="0" cellpadding="5" bgcolor="white">
+        <caption>
+            <h1>
+                <font color="red">股票收益曲线</font>
+            </h1>
+        </caption>
+            <tr>
+                <td>股票代码：</td>
+                <td><input type="text" id="ID" placeholder="请输入股票代码" value="000001"></td>
+                <td>
+                    <select>
+                        <option value="1">60分钟</option>
+                        <option value="2">日线</option>
+                    </select>
+                </td>
+                <td>
+                    <input id="btn1" type="button" class="btn btn-primary" value="提交">
+                </td>
+            </tr>
+    </table>
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(function () {
+            bindBtn1Event();
+        })
+
+        function bindBtn1Event() {
+            $("#btn1").click(function () {
+                $.ajax({
+                    type: "post",
+                    url: "/stock_profit/",//url
+                    //data: $("#stock_info").serialize(),
+                    data: {
+                        ID: $("#ID").val()
+                    },
+                    dataType: "JSON",
+                    success: function (result) {
+                        let rawData = eval(result.data)
+                        console.log(rawData)
+                        let myChart = echarts.init(document.getElementById("div_1"))
+                        let option;
+
+                        const lineData = calcPoint();
+
+                        function calcPoint() {
+                            const resultDate = [];
+                            const resultVal = [];
+                            for (let i = 0; i < rawData.length; i++) {
+                                let item = rawData[i]
+                                //console.log(item)
+                                if (0 !== parseInt(item[7])) {
+                                    resultDate.push(item[0]);
+                                    resultVal.push(item[7]);
+                                }
+                            }
+                            return {
+                                "date": resultDate,
+                                "val": resultVal
+                            };
+                        }
+
+                        option = {
+                            xAxis: {
+                                type: 'category',
+                                data: lineData.date
+                            },
+                            yAxis: {
+                                type: 'value',
+                            },
+                            series: [
+                                {
+                                    data: lineData.val,
+                                    type: 'line',
+                                    smooth: true,
+                                    symbol: "none"
+                                }
+                            ]
+                        };
+                        option && myChart.setOption(option);
+                    }
+                })
+            })
+        }
+    </script>
+{% endblock %}

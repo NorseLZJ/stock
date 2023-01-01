@@ -1,0 +1,7 @@
+data
+trades
+db.sqlite3
+.idea
+DjStock/__pycache__
+stock/__pycache__
+__pycache__
