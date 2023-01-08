@@ -4,7 +4,6 @@ import numpy as np
 from datetime import datetime, date
 import datetime as dt
 import pandas as pd
-from redis import *
 import os
 
 short_win = 12  # 短期EMA平滑天数
@@ -13,38 +12,19 @@ macd_win = 20  # DEA线平滑天数
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 1000)
 
-r = Redis(host="127.0.0.1", port=6379, decode_responses=True)
-industry_key = "industry"
-failed_get_key = "failed_get_daily"
+
+def create_dir(dirs: list[str]):
+    for d in dirs:
+        if not os.path.exists(d):
+            os.mkdir(d)
 
 
-def invide_stock_code(symbol: str):
+def invide_stock_code(symbol: str) -> bool:
     if len(str(symbol)) != 6:
         return False
     if str(symbol)[0:2] not in ("00", "60", "30"):
         return False
     return True
-
-
-def get_industry(_symbol: str, simple_name: str = ""):
-    if simple_name.find("退") != -1 or simple_name.find("ST") != -1:
-        return np.nan
-    val = r.hget(industry_key, _symbol)
-    if val is None:
-        try:
-            vv = ak.stock_individual_info_em(_symbol)
-        except Exception as e:
-            print("get industry(%s,%s) err:%s" % (_symbol, simple_name, e))
-            return np.nan
-        item = vv["item"]
-        value = vv["value"]
-        for i in range(len(item)):
-            if item[i] == "行业":
-                r.hset(industry_key, _symbol, value[i])
-                print("new industry(%s,%s)" % (_symbol, simple_name))
-                return value[i]
-    else:
-        return str(val)
 
 
 def day_60_plus(x):
@@ -67,35 +47,31 @@ def day_60_plus(x):
 
 
 def get_name_akshare(code: str):
-    if code[0:2] == "00" or code[0:2] == "30":  # sz
+    pre = code[0:2]
+    if pre == "00" or pre == "30":
         return format("sz%s" % code)
     return format("sh%s" % code)
 
 
-def get_daily_data(_symbol: str) -> pd.DataFrame:
-    td = dt.date.today()
-    end_date = str(td).replace("-", "")
-    timestamp = datetime.timestamp(datetime.now())
-    dt_object = datetime.fromtimestamp(int(timestamp) - 356 * 2 * 86400)
-    start_date = (str(dt_object).split(" ")[0]).replace(" ", "")
-    name = get_name_akshare(_symbol)
-    out_file = get_stock_data_file(_symbol)
-    val = r.hget(failed_get_key, _symbol)
-    if val is not None:
-        # print("redis check get stock daily data[%s] err:%s" % (_symbol, val))
-        return None
+def get_daily_data(symbol: str, start_date="", end_date="") -> pd.DataFrame:
+    if start_date == "" and end_date == "":
+        td = dt.date.today()
+        end_date = str(td).replace("-", "")
+        timestamp = datetime.timestamp(datetime.now())
+        dt_object = datetime.fromtimestamp(int(timestamp) - 356 * 2 * 86400)
+        start_date = (str(dt_object).split(" ")[0]).replace(" ", "")
+
+    name = get_name_akshare(symbol)
+    out_file = get_stock_data_file(symbol)
     if os.path.exists(out_file):
         return pd.read_csv(out_file)
-    if name == "":
-        return None
     try:
         # 拿一年左右前复权的数据
         df = ak.stock_zh_a_daily(name, start_date=start_date, end_date=end_date, adjust="qfq")
         df.to_csv(out_file, index=False)
         return df
     except Exception as e:
-        print("get stock daily data[%s] err:%s" % (_symbol, e))
-        r.hset(failed_get_key, _symbol, str(e))
+        print("get stock daily data[%s] err:%s" % (symbol, e))
         return None
 
 
@@ -148,30 +124,8 @@ def collect_data_by_df(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def clean_data_by_name(df: pd.DataFrame, type: str) -> pd.DataFrame:
-    if type == "zcfz":
-        pass
-    elif type == "lrb":
-        df = df.loc[
-            (df["净利润同比"] > 5.0)
-            & (df["净利润同比"] < 300.0)
-            & (df["股票简称"].str.find("ST") == -1)
-            & (df["股票简称"].str.find("退") == -1),
-            :,
-        ]
-        df.sort_values(by=["净利润同比"], inplace=True, ignore_index=True, ascending=False)
-    elif type == "xjll":
-        pass
-    df.reset_index(inplace=True, drop=True)
-    return df
-
-
 def get_stock_data_file(symbol: str):
-    return format("stock_data/%s.csv" % (symbol))
-
-
-def get_stock_data_file(code: str):
-    return format("data/%s.csv" % (code))
+    return format("data/%s.csv" % (symbol))
 
 
 def create_dir(dir_list):
@@ -180,24 +134,6 @@ def create_dir(dir_list):
     for d in dir_list:
         if not os.path.exists(d):
             os.mkdir(d)
-
-
-def get_10_daily_data(_symbol: str) -> pd.DataFrame:
-    td = dt.date.today()
-    end_date = str(td).replace("-", "")
-    timestamp = datetime.timestamp(datetime.now())
-    dt_object = datetime.fromtimestamp(int(timestamp) - (100 * 86400))
-    start_date = (str(dt_object).split(" ")[0]).replace(" ", "")
-    name = get_name_akshare(_symbol)
-    if name == "":
-        return None
-    try:
-        # 拿10天复权的数据
-        df = ak.stock_zh_a_daily(name, start_date=start_date, end_date=end_date, adjust="qfq")
-        return df
-    except Exception as e:
-        print("get stock daily data[%s] err:%s" % (_symbol, e))
-        return None
 
 
 def is_bofen(prev_dif, cur_dif, next_dif):

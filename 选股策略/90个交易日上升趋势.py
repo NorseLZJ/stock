@@ -5,6 +5,7 @@
 import pandas as pd
 from comm import *
 import time
+from industry import *
 
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 1000)
@@ -54,29 +55,23 @@ def calc(code: str):
         idx -= 1
 
     print("手工校验下:%s" % code)
-    return format(
-        "%s~%s  %.3f,%.3f" % (prev_date, last_date, prev_ma60, last_ma60)
-    )
+    return format("%s~%s  %.3f,%.3f" % (prev_date, last_date, prev_ma60, last_ma60))
 
 
 if __name__ == "__main__":
-    if not os.path.exists("data"):
-        os.mkdir("data")
-
-    if not os.path.exists("out"):
-        os.mkdir("out")
-
+    create_dir(["data", "out"])
     df = ak.stock_lrb_em()
-    # df = df.loc[
-    #    (df["净利润同比"] > 5.0)
-    #    & (df["净利润同比"] < 300.0)
-    #    & (df["股票简称"].str.find("ST") == -1)
-    #    & (df["股票简称"].str.find("退") == -1),
-    #    :,
-    # ]
+    df = df.loc[
+        (df["净利润同比"] > 5.0)
+        & (df["净利润同比"] < 300.0)
+        & (df["股票简称"].str.find("ST") == -1)
+        & (df["股票简称"].str.find("退") == -1),
+        :,
+    ]
     df.to_csv("temp.csv", index=False)
     df["signle"] = df.apply(lambda x: calc(x["股票代码"]), axis=1)
-    df["industry"] = df.apply(lambda x: get_industry(x["股票代码"], ""), axis=1)
+    industry = Industry()
+    df["industry"] = df.apply(lambda x: i.GetIndustry(x["股票代码"]), axis=1)
     df.sort_values(
         by=["industry", "净利润同比"],
         inplace=True,

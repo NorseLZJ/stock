@@ -72,11 +72,8 @@ def calc(symbol: str, code: str):
     if len(df) <= 0:
         return np.nan
 
-    # print(df.head(5))
-    # print(df.tail(5))
-
     max_idx = len(df) - 1
-    if max_idx < 150:  # 股票日销不到120个，太少
+    if max_idx < 150:  # 股票日交易日太少
         return np.nan
 
     count = 0
@@ -101,11 +98,16 @@ def calc(symbol: str, code: str):
 
 
 if __name__ == "__main__":
-    if not os.path.exists("data"):
-        os.mkdir("data")
+    create_dir(["data", "out"])
 
     df2 = ak.stock_lrb_em()
-    df2 = clean_data_by_name(df2, "lrb")
+    df2 = df2.loc[
+        (df2["净利润同比"] > 5.0)
+        & (df2["净利润同比"] < 300.0)
+        & (df2["股票简称"].str.find("ST") == -1)
+        & (df2["股票简称"].str.find("退") == -1),
+        :,
+    ]
     df2.to_excel("data/利润.xlsx", index=False)
 
     df2["buy"] = df2.apply(lambda x: calc(x["股票简称"], x["股票代码"]), axis=1)
