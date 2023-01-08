@@ -20,9 +20,10 @@
 
 import akshare as ak
 import pandas as pd
-import os
 from comm import *
+from lrb import *
 import time
+
 
 time_prefix = time.strftime("%Y_%m_%d", time.localtime(time.time()))
 
@@ -62,11 +63,7 @@ def check_ma60(df: pd.DataFrame):
 
 
 def calc(symbol: str, code: str):
-    if (
-        symbol.find("ST") != -1
-        or symbol.find("退") != -1
-        or invide_stock_code(code) is False
-    ):
+    if symbol.find("ST") != -1 or symbol.find("退") != -1 or invide_stock_code(code) is False:
         return np.nan
 
     df = get_daily_data(code)
@@ -101,24 +98,16 @@ def calc(symbol: str, code: str):
 
 
 if __name__ == "__main__":
-    if not os.path.exists("data"):
-        os.mkdir("data")
+    create_dir(["data", "out"])
+    df = ak.stock_lrb_em()
+    df = CleanLRB(df)
+    df["buy"] = df.apply(lambda x: calc(x["股票简称"], x["股票代码"]), axis=1)
+    df.dropna(inplace=True, axis=0)
+    df.reset_index(inplace=True)
+    DelLRBColumn(df)
 
-    # df = ak.stock_zcfz_em()
-    # df = clean_data(df, "zcfz")
-    # df.to_excel("data/资产负债.xlsx", index=False)
-
-    df2 = ak.stock_lrb_em()
-    df2 = clean_data_by_name(df2, "lrb")
-    df2.to_excel("data/利润.xlsx", index=False)
-
-    df2["buy"] = df2.apply(lambda x: calc(x["股票简称"], x["股票代码"]), axis=1)
-    df2.dropna(inplace=True, axis=0)
-    df2.drop(columns=["buy"], axis=1, inplace=True)
-    df2.reset_index(inplace=True)
-
-    out_file = format("out/lrb%s.xlsx" % (time_prefix))
-    df2.to_excel(out_file, index=False)
+    out_file = format("out/均线与净利润_%s.csv" % (time_prefix))
+    df.to_csv(out_file, index=False)
 
     # df3 = ak.stock_xjll_em()
     # df3 = clean_data(df3, "xjll")

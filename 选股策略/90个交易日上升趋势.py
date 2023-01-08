@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 """
 近90个交易日上升趋势
 """
@@ -6,6 +8,7 @@ import pandas as pd
 from comm import *
 import time
 from industry import *
+from lrb import *
 
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 1000)
@@ -61,13 +64,7 @@ def calc(code: str):
 if __name__ == "__main__":
     create_dir(["data", "out"])
     df = ak.stock_lrb_em()
-    df = df.loc[
-        (df["净利润同比"] > 5.0)
-        & (df["净利润同比"] < 300.0)
-        & (df["股票简称"].str.find("ST") == -1)
-        & (df["股票简称"].str.find("退") == -1),
-        :,
-    ]
+    df = CleanLRB(df)
     df.to_csv("temp.csv", index=False)
     industry = Industry()
     df["industry"] = df.apply(lambda x: industry.GetIndustry(x["股票代码"]), axis=1)
@@ -83,26 +80,7 @@ if __name__ == "__main__":
     df.reset_index(inplace=True, drop=True)
 
     out_file = format("out/90日上升趋势_%s.csv" % (time_prefix))
-    df.drop(
-        inplace=True,
-        columns=[
-            "净利润",
-            "净利润同比",
-            "营业总收入",
-            "营业总收入同比",
-            "营业总支出-营业支出",
-            "营业总支出-销售费用",
-            "营业总支出-管理费用",
-            "营业总支出-财务费用",
-            "营业总支出-营业总支出",
-            "营业利润",
-            "利润总额",
-            # "公告日期",
-            "industry",
-            "signle",
-            "序号",
-        ],
-    )
+    DelLRBColumn(df)
     df.to_csv(out_file, index=False)
     if os.path.exists("temp.csv"):
         os.remove("temp.csv")
