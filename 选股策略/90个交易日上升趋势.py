@@ -69,9 +69,9 @@ if __name__ == "__main__":
         :,
     ]
     df.to_csv("temp.csv", index=False)
-    df["signle"] = df.apply(lambda x: calc(x["股票代码"]), axis=1)
     industry = Industry()
-    df["industry"] = df.apply(lambda x: i.GetIndustry(x["股票代码"]), axis=1)
+    df["industry"] = df.apply(lambda x: industry.GetIndustry(x["股票代码"]), axis=1)
+    df["signle"] = df.apply(lambda x: calc(x["股票代码"]), axis=1)
     df.sort_values(
         by=["industry", "净利润同比"],
         inplace=True,
