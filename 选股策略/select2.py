@@ -10,7 +10,6 @@ import time
 import os
 from redis import *
 
-r = Redis(host="127.0.0.1", port=6379, decode_responses=True)
 time_prefix = time.strftime("%Y_%m_%d", time.localtime(time.time()))
 list_key = format("up_20_day_%s" % (time_prefix))
 

@@ -9,9 +9,6 @@ macd_win = 20  # DEA线平滑天数
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 500)
 
-r = Redis(host='192.168.66.47', port=6381, decode_responses=True)
-
-
 def is_jc(_dif, _dea):  # 金叉
     if _dif >= _dea:
         return "buy"
