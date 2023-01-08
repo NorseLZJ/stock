@@ -82,7 +82,7 @@ if __name__ == "__main__":
     df.dropna(inplace=True, axis=0)
     df.reset_index(inplace=True, drop=True)
 
-    out_file = format("out/90日上升趋势_%s.xlsx" % (time_prefix))
-    df.to_excel(out_file, index=False)
+    out_file = format("out/90日上升趋势_%s.csv" % (time_prefix))
+    df.to_csv(out_file, index=False)
     if os.path.exists("temp.csv"):
         os.remove("temp.csv")
