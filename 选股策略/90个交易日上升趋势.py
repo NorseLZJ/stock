@@ -83,6 +83,26 @@ if __name__ == "__main__":
     df.reset_index(inplace=True, drop=True)
 
     out_file = format("out/90日上升趋势_%s.csv" % (time_prefix))
+    df.drop(
+        inplace=True,
+        columns=[
+            "净利润",
+            "净利润同比",
+            "营业总收入",
+            "营业总收入同比",
+            "营业总支出-营业支出",
+            "营业总支出-销售费用",
+            "营业总支出-管理费用",
+            "营业总支出-财务费用",
+            "营业总支出-营业总支出",
+            "营业利润",
+            "利润总额",
+            # "公告日期",
+            "industry",
+            "signle",
+            "序号",
+        ],
+    )
     df.to_csv(out_file, index=False)
     if os.path.exists("temp.csv"):
         os.remove("temp.csv")
