@@ -77,7 +77,6 @@ if __name__ == "__main__":
     )
 
     df.dropna(inplace=True, axis=0)
-    df.reset_index(inplace=True, drop=True)
 
     out_file = format("out/90日上升趋势_%s.csv" % (time_prefix))
     DelLRBColumn(df)

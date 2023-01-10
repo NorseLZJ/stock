@@ -11,6 +11,9 @@ long_win = 26  # 长期EMA平滑天数
 macd_win = 20  # DEA线平滑天数
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 1000)
+# 设置命令行输出时的列对齐功能
+pd.set_option("display.unicode.ambiguous_as_wide", True)
+pd.set_option("display.unicode.east_asian_width", True)
 
 
 def create_dir(dirs: list[str]):
@@ -20,7 +23,7 @@ def create_dir(dirs: list[str]):
 
 
 def invide_stock_code(symbol: str) -> bool:
-    if len(str(symbol)) != 6:
+    if len(symbol) != 6:
         return False
     if str(symbol)[0:2] not in ("00", "60", "30"):
         return False
@@ -152,3 +155,24 @@ def is_jincha(prev_dif, prev_dea, cur_dif, cur_dea):
     if prev_dif < prev_dea and cur_dif > cur_dea:
         return True
     return False
+
+
+def g_vbs(ser: pd.Series, keys: list[str]):
+    """
+    get val by pd.Series
+    """
+    return ser[keys]
+
+
+def get_before_day(day: int) -> tuple:
+    timestamp = datetime.timestamp(datetime.now())
+    sec = int(timestamp) - day * 86400
+    dt_object = datetime.fromtimestamp(sec)
+    d_str = (str(dt_object).split(" ")[0]).replace(" ", "")
+    return (d_str, sec)
+
+
+if __name__ == "__main__":
+    s, sec = get_before_day(1)
+    print(s)
+    print(sec)

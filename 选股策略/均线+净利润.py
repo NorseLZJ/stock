@@ -27,12 +27,6 @@ import time
 
 time_prefix = time.strftime("%Y_%m_%d", time.localtime(time.time()))
 
-pd.set_option("display.max_rows", 1000)
-pd.set_option("expand_frame_repr", False)  # 当列太多时不换行
-# 设置命令行输出时的列对齐功能
-pd.set_option("display.unicode.ambiguous_as_wide", True)
-pd.set_option("display.unicode.east_asian_width", True)
-
 
 def check_ma60(df: pd.DataFrame):
     if len(df) < 20:
@@ -103,7 +97,6 @@ if __name__ == "__main__":
     df = CleanLRB(df)
     df["buy"] = df.apply(lambda x: calc(x["股票简称"], x["股票代码"]), axis=1)
     df.dropna(inplace=True, axis=0)
-    df.reset_index(inplace=True)
     DelLRBColumn(df)
 
     out_file = format("out/均线与净利润_%s.csv" % (time_prefix))

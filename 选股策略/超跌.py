@@ -17,8 +17,8 @@
 from tracemalloc import start
 import akshare as ak
 import pandas as pd
-import os
 from comm import *
+from lrb import *
 import time
 
 time_prefix = time.strftime("%Y_%m_%d", time.localtime(time.time()))
@@ -30,36 +30,8 @@ pd.set_option("display.unicode.ambiguous_as_wide", True)
 pd.set_option("display.unicode.east_asian_width", True)
 
 
-def check_ma60(df: pd.DataFrame):
-    if len(df) < 20:
-        return False
-    last_ma60 = 0
-    last_price = 0.0
-    prev_ma60 = 0
-    size = len(df) - 1
-    count = 0
-    while size >= 0:
-        v = df.iloc[size]
-        close, cma60 = v["close"], v["ma60"]
-        if last_ma60 == 0:
-            last_ma60 = cma60
-            last_price = close
-        count += 1
-        size -= 1
-        if count >= 20:
-            prev_ma60 = cma60
-            break
-    if last_ma60 > prev_ma60:
-        subval = float(last_price - last_ma60)
-        rate = (subval / float(last_ma60)) * 100
-        if rate <= 5.0:
-            return True
-    return False
-
-
-def calc(symbol: str, code: str):
-    prefix = code[0:3]
-    if prefix not in ("000", "300", "600"):
+def calc(code: str):
+    if invide_stock_code(code) is False:
         return np.nan
 
     df = get_daily_data(code)
@@ -78,9 +50,11 @@ def calc(symbol: str, code: str):
 
     count = 0
     found = False
+    """
+    有150个交易日估价都在60天均线下方，理解为超跌
+    """
     while max_idx >= 0:
-        t_val = df.iloc[max_idx]["close"]
-        t_ma60 = df.iloc[max_idx]["ma60"]
+        t_val, t_ma60 = g_vbs(df.iloc[max_idx], ["close", "ma60"])
         if t_val < t_ma60:
             count += 1
         elif count >= 150:
@@ -100,20 +74,13 @@ def calc(symbol: str, code: str):
 if __name__ == "__main__":
     create_dir(["data", "out"])
 
-    df2 = ak.stock_lrb_em()
-    df2 = df2.loc[
-        (df2["净利润同比"] > 5.0)
-        & (df2["净利润同比"] < 300.0)
-        & (df2["股票简称"].str.find("ST") == -1)
-        & (df2["股票简称"].str.find("退") == -1),
-        :,
-    ]
-    df2.to_excel("data/利润.xlsx", index=False)
+    df = ak.stock_lrb_em()
+    df = CleanLRB(df)
 
-    df2["buy"] = df2.apply(lambda x: calc(x["股票简称"], x["股票代码"]), axis=1)
-    df2.dropna(inplace=True, axis=0)
-    df2.drop(columns=["buy"], axis=1, inplace=True)
-    df2.reset_index(inplace=True)
+    df["buy"] = df.apply(lambda x: calc(x["股票代码"]), axis=1)
+    df.dropna(inplace=True, axis=0)
+    df.drop(columns=["buy"], axis=1, inplace=True)
 
+    DelLRBColumn(df)
     out_file = format("out/lrb_超跌%s.xlsx" % (time_prefix))
-    df2.to_excel(out_file, index=False)
+    df.to_excel(out_file, index=False)
