@@ -22,7 +22,7 @@ from stock import views
 urlpatterns = [
     # path("admin/", admin.site.urls),
     path("", views.index),
-    path("index/", views.index),
+    # path("index/", views.index),
     path("stock/", views.stock),
     path("stock_profit/", views.stock),
 ]
