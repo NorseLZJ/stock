@@ -35,7 +35,6 @@ def get_data(symbol: str):
 
     if os.path.exists(df_file):
         temp_df = pd.read_csv(df_file)
-        temp_df.set_index("date", inplace=True)
         return temp_df
     else:
         end_date = time.strftime("%Y-%m-%d")
@@ -44,7 +43,6 @@ def get_data(symbol: str):
         if temp_df is None:
             return None
         temp_df.to_csv(df_file, index=False)
-        temp_df.set_index("date", inplace=True)
         return temp_df
 
 
@@ -145,4 +143,12 @@ class Stock(object):
 
 
 if __name__ == "__main__":
-    pass
+    df = get_data(format_stock("002424"))
+    start = "2016-03-31"
+    end = "2017-08-14"
+    df = df.loc[
+        (df["date"] > start) & (df["date"] < end),
+        :,
+    ]
+    print(df.head())
+    print(df.tail())
